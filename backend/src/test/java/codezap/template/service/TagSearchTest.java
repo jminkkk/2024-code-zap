@@ -5,21 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
 import codezap.category.domain.Category;
 import codezap.category.repository.CategoryRepository;
+import codezap.category.repository.FakeCategoryRepository;
 import codezap.fixture.MemberDtoFixture;
 import codezap.member.domain.Member;
+import codezap.member.repository.FakeMemberRepository;
 import codezap.member.repository.MemberRepository;
 import codezap.template.domain.Snippet;
 import codezap.template.domain.Tag;
@@ -28,49 +23,38 @@ import codezap.template.domain.TemplateTag;
 import codezap.template.domain.ThumbnailSnippet;
 import codezap.template.dto.request.CreateSnippetRequest;
 import codezap.template.dto.request.CreateTemplateRequest;
+import codezap.template.repository.FakeSnippetRepository;
+import codezap.template.repository.FakeTagRepository;
+import codezap.template.repository.FakeTemplateRepository;
+import codezap.template.repository.FakeTemplateTagRepository;
+import codezap.template.repository.FakeThumbnailSnippetRepository;
 import codezap.template.repository.SnippetRepository;
 import codezap.template.repository.TagRepository;
 import codezap.template.repository.TemplateRepository;
 import codezap.template.repository.TemplateTagRepository;
 import codezap.template.repository.ThumbnailSnippetRepository;
-import io.restassured.RestAssured;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@Sql(value = "/clear.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(value = "/clear.sql", executionPhase = ExecutionPhase.AFTER_TEST_CLASS)
 public class TagSearchTest {
 
-    @LocalServerPort
-    int port;
+    private Member firstMember = new Member(1L, "test1@email.com", "password1234", "username1");
+    private Member secondMember = new Member(2L, "test2@email.com", "password1234", "username2");
+    private Category firstCategory = new Category(1L, firstMember, "카테고리 없음", true);
 
-    @Autowired
-    private TemplateService templateService;
-
-    @Autowired
-    private TemplateRepository templateRepository;
-
-    @Autowired
-    private SnippetRepository snippetRepository;
-
-    @Autowired
-    private ThumbnailSnippetRepository thumbnailSnippetRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private TemplateTagRepository templateTagRepository;
-
-    @Autowired
-    private TagRepository tagRepository;
-
-    @Autowired
-    private MemberRepository memberRepository;
-
-    @BeforeEach
-    void setting() {
-        RestAssured.port = port;
-    }
+    private final TemplateRepository templateRepository = new FakeTemplateRepository();
+    private final SnippetRepository snippetRepository = new FakeSnippetRepository();
+    private final ThumbnailSnippetRepository thumbnailSnippetRepository = new FakeThumbnailSnippetRepository();
+    private final CategoryRepository categoryRepository = new FakeCategoryRepository(List.of(firstCategory));
+    private final TemplateTagRepository templateTagRepository = new FakeTemplateTagRepository();
+    private final TagRepository tagRepository = new FakeTagRepository();
+    private final MemberRepository memberRepository = new FakeMemberRepository(List.of(firstMember, secondMember));
+    private final TemplateService templateService = new TemplateService(
+            thumbnailSnippetRepository,
+            templateRepository,
+            snippetRepository,
+            categoryRepository,
+            tagRepository,
+            templateTagRepository,
+            memberRepository);
 
     private void saveDefault15Templates(Member member, Category category) {
         saveTemplate(makeTemplateRequest("hello keyword 1"), member, category);
