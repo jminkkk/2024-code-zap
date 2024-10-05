@@ -3,3 +3,5 @@ spring:
     active:
       - local
       - db
+helper:
+  secret-key: AIzaSyDyCtPQKOohmEYHAGymw20BCRP-sdKk5rs
